@@ -1,0 +1,105 @@
+package model
+
+import (
+	"github.com/ClessLi/Game-test/constant"
+	"github.com/ClessLi/Game-test/resource"
+	"github.com/go-gl/mathgl/mgl32"
+)
+
+//可移动的游戏对象
+type MoveObj struct {
+	GameObj
+	//在上下左右方向是否可移动
+	stockUp, stockDown, stockLeft, stockRight bool
+	//水平移动速度
+	movementSpeed float32
+	//飞行速度
+	fallSpeed float32
+	//下坠速度
+	flySpeed float32
+	//移动时的动画纹理
+	moveTextures []*resource.Texture2D
+	//静止时的纹理
+	standTexture []*resource.Texture2D
+	//当前静止帧
+	standIndex int
+	//游戏地图
+	gameMap *GameMap
+	//当前运动帧
+	moveIndex int
+	//运动帧之间的切换阈值
+	moveDelta float32
+}
+
+func NewMoveObject(gameObj GameObj, movementSpeed, flySpeed float32, moveTextures []*resource.Texture2D, standTextures []*resource.Texture2D, gameMap *GameMap) *MoveObj {
+	moveObj := &MoveObj{
+		GameObj:       gameObj,
+		movementSpeed: movementSpeed,
+		fallSpeed:     100,
+		gameMap:       gameMap,
+		moveTextures:  moveTextures,
+		flySpeed:      flySpeed,
+		moveIndex:     0,
+		moveDelta:     0,
+		standTexture:  standTextures,
+		standIndex:    0,
+	}
+	return moveObj
+}
+
+//恢复静止
+func (moveObj *MoveObj) Stand(delta float32) {
+	moveObj.texture = moveObj.standTexture
+}
+
+//由用户主动发起的运动
+func (moveObj *MoveObj) Move(direction constant.Direction, delta float32) {
+	shift := mgl32.Vec2{0, 0}
+	if direction == constant.DOWN {
+		if !moveObj.stockDown && moveObj.y+moveObj.size[1] < moveObj.gameMap.Height {
+			shift[1] += moveObj.flySpeed * delta
+		}
+	}
+	if direction == constant.UP {
+		if !moveObj.stockUp && moveObj.y > 0 {
+			shift[1] -= moveObj.flySpeed * delta
+		}
+	}
+	if direction == constant.LEFT {
+		moveObj.ForWardX()
+		if moveObj.moveIndex >= len(moveObj.moveTextures) {
+			moveObj.moveIndex = 0
+		}
+		moveObj.moveDelta += delta
+		if moveObj.moveDelta > 0.1 {
+			moveObj.moveDelta = 0
+			moveObj.texture = moveObj.moveTextures[moveObj.moveIndex]
+			moveObj.moveIndex += 1
+		}
+		if !moveObj.stockLeft && moveObj.x > 0 {
+			shift[0] -= moveObj.movementSpeed * delta
+		}
+	}
+	if direction == constant.RIGHT {
+		moveObj.ReverseX()
+		if moveObj.moveIndex >= len(moveObj.moveTextures) {
+			moveObj.moveIndex = 0
+		}
+		moveObj.moveDelta += delta
+		if moveObj.moveDelta > 0.1 {
+			moveObj.moveDelta = 0
+			moveObj.texture = moveObj.moveTextures[moveObj.moveIndex]
+			moveObj.moveIndex += 1
+		}
+		if !moveObj.stockRight && moveObj.x+moveObj.size[0] < moveObj.gameMap.Width {
+			shift[0] += moveObj.movementSpeed * delta
+		}
+	}
+	isCol, position := moveObj.gameMap.IsColl(moveObj.GameObj, shift)
+	if isCol {
+		moveObj.SetPosition(position)
+	} else {
+		moveObj.x += shift[0]
+		moveObj.y += shift[1]
+	}
+}
