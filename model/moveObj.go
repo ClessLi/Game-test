@@ -23,6 +23,8 @@ type MoveObj struct {
 	standTexture []*resource.Texture2D
 	//当前静止帧
 	standIndex int
+	//静止帧之间的切换阈值
+	standDelta float32
 	//游戏地图
 	gameMap *GameMap
 	//当前运动帧
@@ -43,54 +45,52 @@ func NewMoveObject(gameObj GameObj, movementSpeed, flySpeed float32, moveTexture
 		moveDelta:     0,
 		standTexture:  standTextures,
 		standIndex:    0,
+		standDelta:    0,
 	}
 	return moveObj
 }
 
 //恢复静止
 func (moveObj *MoveObj) Stand(delta float32) {
-	moveObj.texture = moveObj.standTexture
+	if moveObj.standIndex >= len(moveObj.standTexture) {
+		moveObj.standIndex = 0
+	}
+	moveObj.standDelta += delta
+	if moveObj.standDelta > 0.1 {
+		moveObj.standDelta = 0
+		moveObj.texture = moveObj.standTexture[moveObj.standIndex]
+		moveObj.standIndex += 1
+	}
 }
 
 //由用户主动发起的运动
 func (moveObj *MoveObj) Move(direction constant.Direction, delta float32) {
 	shift := mgl32.Vec2{0, 0}
-	if direction == constant.DOWN {
+	if moveObj.moveIndex >= len(moveObj.moveTextures) {
+		moveObj.moveIndex = 0
+	}
+	moveObj.moveDelta += delta
+	if moveObj.moveDelta > 0.1 {
+		moveObj.moveDelta = 0
+		moveObj.texture = moveObj.moveTextures[moveObj.moveIndex]
+		moveObj.moveIndex += 1
+	}
+	switch direction {
+	case constant.DOWN:
 		if !moveObj.stockDown && moveObj.y+moveObj.size[1] < moveObj.gameMap.Height {
 			shift[1] += moveObj.flySpeed * delta
 		}
-	}
-	if direction == constant.UP {
+	case constant.UP:
 		if !moveObj.stockUp && moveObj.y > 0 {
 			shift[1] -= moveObj.flySpeed * delta
 		}
-	}
-	if direction == constant.LEFT {
+	case constant.LEFT:
 		moveObj.ForWardX()
-		if moveObj.moveIndex >= len(moveObj.moveTextures) {
-			moveObj.moveIndex = 0
-		}
-		moveObj.moveDelta += delta
-		if moveObj.moveDelta > 0.1 {
-			moveObj.moveDelta = 0
-			moveObj.texture = moveObj.moveTextures[moveObj.moveIndex]
-			moveObj.moveIndex += 1
-		}
 		if !moveObj.stockLeft && moveObj.x > 0 {
 			shift[0] -= moveObj.movementSpeed * delta
 		}
-	}
-	if direction == constant.RIGHT {
+	case constant.RIGHT:
 		moveObj.ReverseX()
-		if moveObj.moveIndex >= len(moveObj.moveTextures) {
-			moveObj.moveIndex = 0
-		}
-		moveObj.moveDelta += delta
-		if moveObj.moveDelta > 0.1 {
-			moveObj.moveDelta = 0
-			moveObj.texture = moveObj.moveTextures[moveObj.moveIndex]
-			moveObj.moveIndex += 1
-		}
 		if !moveObj.stockRight && moveObj.x+moveObj.size[0] < moveObj.gameMap.Width {
 			shift[0] += moveObj.movementSpeed * delta
 		}
