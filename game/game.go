@@ -14,8 +14,8 @@ import (
 type GameState int
 
 const (
-	GAME_ACTIVE GameState = 0
-	GAME_MENU   GameState = 1
+	GAME_ACTIVE GameState = iota
+	GAME_MENU
 )
 
 type Game struct {
