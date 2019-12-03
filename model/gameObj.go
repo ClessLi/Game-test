@@ -36,11 +36,13 @@ func (gameObj *GameObj) ForWardX() {
 	gameObj.isXReverse = 1
 }
 func NewGameObj(texture *resource.Texture2D, x, y float32, size *mgl32.Vec2, rotate float32, color *mgl32.Vec3) *GameObj {
-	return &GameObj{texture: texture,
+	return &GameObj{
+		texture:    texture,
 		x:          x,
 		y:          y,
 		size:       size,
 		rotate:     rotate,
 		color:      color,
-		isXReverse: 1}
+		isXReverse: 1,
+	}
 }
