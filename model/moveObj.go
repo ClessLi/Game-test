@@ -56,7 +56,7 @@ func (moveObj *MoveObj) Stand(delta float32) {
 		moveObj.standIndex = 0
 	}
 	moveObj.standDelta += delta
-	if moveObj.standDelta > 0.1 {
+	if moveObj.standDelta > 0.2 {
 		moveObj.standDelta = 0
 		moveObj.texture = moveObj.standTexture[moveObj.standIndex]
 		moveObj.standIndex += 1
