@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/ClessLi/Game-test/physic"
 	"github.com/ClessLi/Game-test/resource"
 	"github.com/ClessLi/Game-test/sprite"
 	"github.com/go-gl/mathgl/mgl32"
@@ -53,6 +54,25 @@ func NewGameMap(width, height float32, mapFile string) *GameMap {
 		heightWallNum: heightWallNum,
 		widthWallNum:  widthWallNum,
 	}
+}
+
+//检测一个物体是否与地图中的方块或尖刺发生碰撞
+func (gameMap *GameMap) IsColl(gameObj GameObj, shift mgl32.Vec2) (bool, mgl32.Vec2) {
+	position := gameObj.GetPosition()
+	size := gameObj.GetSize()
+	startX, endX, startY, endY := gameMap.FetchBox(mgl32.Vec2{position[0], position[1]}, mgl32.Vec2{size[0], size[1]})
+	for i := startX; i <= endX; i++ {
+		for j := startY; j < endY; j++ {
+			wall := gameMap.walls[i][j]
+			if wall != nil {
+				isCol, position := physic.ColldingAABBPlace(gameObj, wall, shift)
+				if isCol {
+					return isCol, position
+				}
+			}
+		}
+	}
+	return false, gameObj.GetPosition()
 }
 
 //将一个物体坐标转换为地图格子坐标范围
