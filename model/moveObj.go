@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"github.com/ClessLi/Game-test/constant"
 	"github.com/ClessLi/Game-test/resource"
 	"github.com/go-gl/mathgl/mgl32"
@@ -56,7 +57,7 @@ func (moveObj *MoveObj) Stand(delta float32) {
 		moveObj.standIndex = 0
 	}
 	moveObj.standDelta += delta
-	if moveObj.standDelta > 0.2 {
+	if moveObj.standDelta > 0.1 {
 		moveObj.standDelta = 0
 		moveObj.texture = moveObj.standTexture[moveObj.standIndex]
 		moveObj.standIndex += 1
@@ -70,26 +71,30 @@ func (moveObj *MoveObj) Move(direction constant.Direction, delta float32) {
 		moveObj.moveIndex = 0
 	}
 	moveObj.moveDelta += delta
-	if moveObj.moveDelta > 0.1 {
+	if moveObj.moveDelta > 0.05 {
 		moveObj.moveDelta = 0
 		moveObj.texture = moveObj.moveTextures[moveObj.moveIndex]
 		moveObj.moveIndex += 1
 	}
 	switch direction {
 	case constant.DOWN:
+		fmt.Println("click down")
 		if !moveObj.stockDown && moveObj.y+moveObj.size[1] < moveObj.gameMap.Height {
 			shift[1] += moveObj.flySpeed * delta
 		}
 	case constant.UP:
+		fmt.Println("click up")
 		if !moveObj.stockUp && moveObj.y > 0 {
 			shift[1] -= moveObj.flySpeed * delta
 		}
 	case constant.LEFT:
+		fmt.Println("click left")
 		moveObj.ForWardX()
 		if !moveObj.stockLeft && moveObj.x > 0 {
 			shift[0] -= moveObj.movementSpeed * delta
 		}
 	case constant.RIGHT:
+		fmt.Println("click right")
 		moveObj.ReverseX()
 		if !moveObj.stockRight && moveObj.x+moveObj.size[0] < moveObj.gameMap.Width {
 			shift[0] += moveObj.movementSpeed * delta
