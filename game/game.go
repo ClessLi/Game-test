@@ -73,7 +73,7 @@ func (game *Game) Init() {
 	//创建游戏地图
 	game.gameMap = model.NewGameMap(game.worldWidth, game.worldHeight, "testMapFile")
 	//创建测试游戏人物
-	gameObj := model.NewGameObj(resource.GetTexture("0"),
+	gameObj := model.NewGameObj(resource.GetTexture("x"),
 		game.worldWidth/2,
 		game.worldHeight/2,
 		&mgl32.Vec2{70, 100},
@@ -111,19 +111,19 @@ func (game *Game) Init() {
 func (game *Game) ProcessInput(delta float32) {
 	if game.state == GAME_ACTIVE {
 		playerMove := false
-		if game.Keys[glfw.KeyA] {
+		if game.Keys[glfw.KeyA] || game.Keys[glfw.KeyLeft] {
 			playerMove = true
 			game.player.Move(constant.LEFT, delta)
 		}
-		if game.Keys[glfw.KeyD] {
+		if game.Keys[glfw.KeyD] || game.Keys[glfw.KeyRight] {
 			playerMove = true
 			game.player.Move(constant.RIGHT, delta)
 		}
-		if game.Keys[glfw.KeyW] {
+		if game.Keys[glfw.KeyW] || game.Keys[glfw.KeyUp] {
 			playerMove = true
 			game.player.Move(constant.UP, delta)
 		}
-		if game.Keys[glfw.KeyS] {
+		if game.Keys[glfw.KeyS] || game.Keys[glfw.KeyDown] {
 			playerMove = true
 			game.player.Move(constant.DOWN, delta)
 		}
