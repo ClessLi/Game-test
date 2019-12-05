@@ -1,6 +1,7 @@
 package physic
 
 import (
+	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"math"
 )
@@ -25,6 +26,10 @@ func isCollidingReact(position1, size1, position2, size2 mgl32.Vec2) bool {
 	collisionX := position1[0]+size1[0] >= position2[0] && position2[0]+size2[0] >= position1[0]
 	// y轴方向碰撞？
 	collisionY := position1[1]+size1[1] >= position2[1] && position2[1]+size2[1] >= position1[1]
+	if collisionX && collisionY {
+		fmt.Println("x: ", position1[0], position2[0], ". x_size: ", size1[0], size2[0])
+		fmt.Println("y: ", position1[1], position2[1], ". y_size: ", size1[1], size2[1])
+	}
 	return collisionX && collisionY
 }
 
@@ -43,11 +48,14 @@ func ColldingAABBPlace(thisGameObj, anotherObj React, shift mgl32.Vec2) (bool, m
 	if shift[0] == 0 && shift[1] == 0 {
 		return false, position
 	}
-	colldingShift := mgl32.Vec2{0.0}
+	colldingShift := mgl32.Vec2{0, 0}
 	colldingDt := shift.Normalize()
+	//fmt.Println(colldingShift, shift)
 	for math.Abs(float64(colldingShift[0])) <= math.Abs(float64(shift[0])) && math.Abs(float64(colldingShift[1])) <= math.Abs(float64(shift[1])) {
 		tempColldingShift := colldingShift.Sub(colldingDt)
+		//fmt.Println(colldingShift, shift)
 		if WillCollidingAABB(thisGameObj, anotherObj, tempColldingShift) {
+			//fmt.Println("colldingDt:", colldingDt, "tempColldingShift:", tempColldingShift)
 			return true, thisGameObj.GetPosition().Sub(colldingShift)
 		}
 		colldingShift = tempColldingShift
