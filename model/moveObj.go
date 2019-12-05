@@ -65,7 +65,7 @@ func (moveObj *MoveObj) Stand(delta float32) {
 }
 
 //由用户主动发起的运动
-func (moveObj *MoveObj) Move(direction constant.Direction, delta float32) {
+func (moveObj *MoveObj) Move(delta float32, ml []constant.Direction) {
 	shift := mgl32.Vec2{0, 0}
 	if moveObj.moveIndex >= len(moveObj.moveTextures) {
 		moveObj.moveIndex = 0
@@ -76,28 +76,31 @@ func (moveObj *MoveObj) Move(direction constant.Direction, delta float32) {
 		moveObj.texture = moveObj.moveTextures[moveObj.moveIndex]
 		moveObj.moveIndex += 1
 	}
-	switch direction {
-	case constant.DOWN:
-		fmt.Println("click down")
-		if !moveObj.stockDown && moveObj.y+moveObj.size[1] < moveObj.gameMap.Height {
-			shift[1] += moveObj.flySpeed * delta
-		}
-	case constant.UP:
-		fmt.Println("click up")
-		if !moveObj.stockUp && moveObj.y > 0 {
-			shift[1] -= moveObj.flySpeed * delta
-		}
-	case constant.LEFT:
-		fmt.Println("click left")
-		moveObj.ForWardX()
-		if !moveObj.stockLeft && moveObj.x > 0 {
-			shift[0] -= moveObj.movementSpeed * delta
-		}
-	case constant.RIGHT:
-		fmt.Println("click right")
-		moveObj.ReverseX()
-		if !moveObj.stockRight && moveObj.x+moveObj.size[0] < moveObj.gameMap.Width {
-			shift[0] += moveObj.movementSpeed * delta
+	for i := 0; i < len(ml); i++ {
+		direction := ml[i]
+		switch direction {
+		case constant.DOWN:
+			fmt.Println("click down")
+			if !moveObj.stockDown && moveObj.y+moveObj.size[1] < moveObj.gameMap.Height {
+				shift[1] += moveObj.flySpeed * delta
+			}
+		case constant.UP:
+			fmt.Println("click up")
+			if !moveObj.stockUp && moveObj.y > 0 {
+				shift[1] -= moveObj.flySpeed * delta
+			}
+		case constant.LEFT:
+			fmt.Println("click left")
+			moveObj.ForWardX()
+			if !moveObj.stockLeft && moveObj.x > 0 {
+				shift[0] -= moveObj.movementSpeed * delta
+			}
+		case constant.RIGHT:
+			fmt.Println("click right")
+			moveObj.ReverseX()
+			if !moveObj.stockRight && moveObj.x+moveObj.size[0] < moveObj.gameMap.Width {
+				shift[0] += moveObj.movementSpeed * delta
+			}
 		}
 	}
 	isCol, position := moveObj.gameMap.IsColl(moveObj.GameObj, shift)
