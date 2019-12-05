@@ -10,66 +10,72 @@ import (
 )
 
 type GameMap struct {
-	Height        float32
-	Width         float32
-	walls         [][]*Wall
-	spikes        [][]*Spike
-	heightWallNum int
-	widthWallNum  int
+	Height       float32
+	Width        float32
+	boxes        [][]*Box
+	heightBoxNum int
+	widthBoxNum  int
 }
 
 //一个简单的测试用的游戏地图生成函数
 func NewGameMap(width, height float32, mapFile string) *GameMap {
-	heightWallNum := int(math.Ceil(float64(height / WallHeight)))
-	widthWallNum := int(math.Ceil(float64(width / WallWidth)))
-	grounds := heightWallNum / 4
-	xGrounds := widthWallNum / 4
-	fmt.Println("map wall size:", heightWallNum, widthWallNum)
-	walls := make([][]*Wall, heightWallNum)
-	spikes := make([][]*Spike, heightWallNum)
-	for i := 0; i < heightWallNum; i++ {
-		rowWalls := make([]*Wall, widthWallNum)
-		rowSpikes := make([]*Spike, widthWallNum)
+	heightBoxNum := int(math.Ceil(float64(height / BoxHeight)))
+	widthBoxNum := int(math.Ceil(float64(width / BoxWidth)))
+	grounds := heightBoxNum / 4
+	xGrounds := widthBoxNum / 4
+	fmt.Println("map box size:", heightBoxNum, widthBoxNum)
+	boxes := make([][]*Box, heightBoxNum)
+	for i := 0; i < heightBoxNum; i++ {
+		rowboxs := make([]*Box, widthBoxNum)
 		if i < grounds || i > grounds*3 {
-			for j := 0; j < widthWallNum; j++ {
+			for j := 0; j < widthBoxNum; j++ {
 				if j < xGrounds || j > xGrounds*3 || i == 0 {
-					gameObj := NewGameObj(resource.GetTexture("wall"), float32(j)*WallWidth, float32(i)*WallHeight, &mgl32.Vec2{WallWidth, WallHeight}, 0, &mgl32.Vec3{1, 1, 1})
-					rowWalls[j] = &Wall{GameObj: *gameObj}
+					rowboxs[j] = setWall(j, i)
+				}
+			}
+			if i == 1 {
+				for s := 0; s < widthBoxNum; s++ {
+					if s >= xGrounds && s <= xGrounds*3 {
+						rowboxs[s] = setSpike(s, i)
+					}
 				}
 			}
 		}
-		walls[i] = rowWalls
-		if i == grounds {
-			for s := 0; s < widthWallNum; s++ {
-				if s >= xGrounds && s <= xGrounds*3 {
-					spikesObj := NewGameObj(resource.GetTexture("spike"), float32(s+xGrounds)*SpikeWidth, float32(i)*SpikeHeight, &mgl32.Vec2{SpikeWidth, SpikeHeight}, 0, &mgl32.Vec3{1, 1, 1})
-					rowSpikes[s] = &Spike{GameObj: *spikesObj}
-				}
-			}
-		}
-		spikes[i] = rowSpikes
+		boxes[i] = rowboxs
 	}
 	return &GameMap{
-		Height:        height,
-		Width:         width,
-		walls:         walls,
-		spikes:        spikes,
-		heightWallNum: heightWallNum,
-		widthWallNum:  widthWallNum,
+		Height:       height,
+		Width:        width,
+		boxes:        boxes,
+		heightBoxNum: heightBoxNum,
+		widthBoxNum:  widthBoxNum,
 	}
+}
+
+func setSpike(x, y int) *Box {
+	spike := NewGameObj(resource.GetTexture("spike"), float32(x)*BoxWidth, float32(y)*BoxHeight, &mgl32.Vec2{BoxWidth, BoxHeight}, 0, &mgl32.Vec3{1, 1, 1})
+	return &Box{*spike}
+}
+
+func setWall(x, y int) *Box {
+	wall := NewGameObj(resource.GetTexture("wall"), float32(x)*BoxWidth, float32(y)*BoxHeight, &mgl32.Vec2{BoxWidth, BoxHeight}, 0, &mgl32.Vec3{1, 1, 1})
+	return &Box{*wall}
 }
 
 //检测一个物体是否与地图中的方块或尖刺发生碰撞
 func (gameMap *GameMap) IsColl(gameObj GameObj, shift mgl32.Vec2) (bool, mgl32.Vec2) {
 	position := gameObj.GetPosition()
 	size := gameObj.GetSize()
+	//startX, endX, startY, endY := gameMap.FetchBox(mgl32.Vec2{position[0], position[1]}, mgl32.Vec2{size[0], size[1]})
 	startX, endX, startY, endY := gameMap.FetchBox(mgl32.Vec2{position[0], position[1]}, mgl32.Vec2{size[0], size[1]})
 	for i := startX; i <= endX; i++ {
 		for j := startY; j < endY; j++ {
-			wall := gameMap.walls[i][j]
-			if wall != nil {
-				isCol, position := physic.ColldingAABBPlace(gameObj, wall, shift)
+			box := gameMap.boxes[i][j]
+			if box != nil {
+				isCol, position := physic.ColldingAABBPlace(gameObj, box, shift)
 				if isCol {
+					fmt.Println(i, j)
+					//fmt.Println(box.x, box.y, box.size, box.texture.ID)
 					return isCol, position
 				}
 			}
@@ -78,23 +84,23 @@ func (gameMap *GameMap) IsColl(gameObj GameObj, shift mgl32.Vec2) (bool, mgl32.V
 	return false, gameObj.GetPosition()
 }
 
-//将一个物体坐标转换为地图格子坐标范围
+// 将一个物体坐标转换为地图格子坐标范围
 func (gameMap *GameMap) FetchBox(position, size mgl32.Vec2) (int, int, int, int) {
-	startY := int(math.Floor(float64(position[0]/gameMap.Width*float32(gameMap.widthWallNum)))) - 1
+	startY := int(math.Floor(float64(position[0]/gameMap.Width*float32(gameMap.widthBoxNum)))) - 1
 	if startY <= 0 {
 		startY = 0
 	}
-	endY := int(math.Ceil(float64((position[0]+size[0])/gameMap.Width*float32(gameMap.widthWallNum)))) + 1
-	if endY >= gameMap.widthWallNum {
-		endY = gameMap.widthWallNum - 1
+	endY := int(math.Ceil(float64((position[0]+size[0])/gameMap.Width*float32(gameMap.widthBoxNum)))) + 1
+	if endY >= gameMap.widthBoxNum {
+		endY = gameMap.widthBoxNum - 1
 	}
-	startX := int(math.Floor(float64(position[1]/gameMap.Height*float32(gameMap.heightWallNum)))) - 1
+	startX := int(math.Floor(float64(position[1]/gameMap.Height*float32(gameMap.heightBoxNum)))) - 1
 	if startX < 0 {
 		startX = 0
 	}
-	endX := int(math.Ceil(float64((position[1]+size[1])/gameMap.Height*float32(gameMap.heightWallNum)))) + 1
-	if endX >= gameMap.heightWallNum {
-		endX = gameMap.heightWallNum - 1
+	endX := int(math.Ceil(float64((position[1]+size[1])/gameMap.Height*float32(gameMap.heightBoxNum)))) + 1
+	if endX >= gameMap.heightBoxNum {
+		endX = gameMap.heightBoxNum - 1
 	}
 	return startX, endX, startY, endY
 }
@@ -104,13 +110,9 @@ func (gameMap *GameMap) Draw(position mgl32.Vec2, zoom mgl32.Vec2, renderer *spr
 	startX, endX, startY, endY := gameMap.FetchBox(position, zoom)
 	for i := startX; i <= endX; i++ {
 		for j := startY; j < endY; j++ {
-			spike := gameMap.spikes[i][j]
-			if spike != nil {
-				spike.Draw(renderer)
-			}
-			wall := gameMap.walls[i][j]
-			if wall != nil {
-				wall.Draw(renderer)
+			box := gameMap.boxes[i][j]
+			if box != nil {
+				box.Draw(renderer)
 			}
 		}
 	}
