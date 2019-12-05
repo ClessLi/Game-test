@@ -73,10 +73,10 @@ func (game *Game) Init() {
 	//创建游戏地图
 	game.gameMap = model.NewGameMap(game.worldWidth, game.worldHeight, "testMapFile")
 	//创建测试游戏人物
-	gameObj := model.NewGameObj(resource.GetTexture("x"),
+	gameObj := model.NewGameObj(resource.GetTexture("0"),
 		game.worldWidth/2,
 		game.worldHeight/2,
-		&mgl32.Vec2{70, 100},
+		&mgl32.Vec2{100, 100},
 		0,
 		&mgl32.Vec3{1, 1, 1})
 	//创建摄像头,将摄像头同步到玩家位置
@@ -110,25 +110,28 @@ func (game *Game) Init() {
 //处理输入
 func (game *Game) ProcessInput(delta float32) {
 	if game.state == GAME_ACTIVE {
+		var moveList []constant.Direction
 		playerMove := false
 		if game.Keys[glfw.KeyA] || game.Keys[glfw.KeyLeft] {
 			playerMove = true
-			game.player.Move(constant.LEFT, delta)
+			moveList = append(moveList, constant.LEFT)
 		}
 		if game.Keys[glfw.KeyD] || game.Keys[glfw.KeyRight] {
 			playerMove = true
-			game.player.Move(constant.RIGHT, delta)
+			moveList = append(moveList, constant.RIGHT)
 		}
 		if game.Keys[glfw.KeyW] || game.Keys[glfw.KeyUp] {
 			playerMove = true
-			game.player.Move(constant.UP, delta)
+			moveList = append(moveList, constant.UP)
 		}
 		if game.Keys[glfw.KeyS] || game.Keys[glfw.KeyDown] {
 			playerMove = true
-			game.player.Move(constant.DOWN, delta)
+			moveList = append(moveList, constant.DOWN)
 		}
 		if !playerMove {
 			game.player.Stand(delta)
+		} else {
+			game.player.Move(delta, moveList)
 		}
 	}
 }
