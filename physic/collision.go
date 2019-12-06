@@ -1,7 +1,6 @@
 package physic
 
 import (
-	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"math"
 )
@@ -27,15 +26,15 @@ func isCollidingReact(position1, size1, position2, size2 mgl32.Vec2) bool {
 	// y轴方向碰撞？
 	collisionY := position1[1]+size1[1] >= position2[1] && position2[1]+size2[1] >= position1[1]
 	if collisionX && collisionY {
-		fmt.Println("x: ", position1[0], position2[0], ". x_size: ", size1[0], size2[0])
-		fmt.Println("y: ", position1[1], position2[1], ". y_size: ", size1[1], size2[1])
+		//fmt.Println("x: ", position1[0], position2[0], ". x_size: ", size1[0], size2[0])
+		//fmt.Println("y: ", position1[1], position2[1], ". y_size: ", size1[1], size2[1])
 	}
 	return collisionX && collisionY
 }
 
 //检测两个矩形运动后是否会发生碰撞
 func WillCollidingAABB(thisGameObj, anotherObj React, dt mgl32.Vec2) bool {
-	tPosition := thisGameObj.GetPosition().Sub(dt)
+	tPosition := thisGameObj.GetPosition().Add(dt)
 	tSize := thisGameObj.GetSize()
 	aPosition := anotherObj.GetPosition()
 	aSize := anotherObj.GetSize()
@@ -52,11 +51,14 @@ func ColldingAABBPlace(thisGameObj, anotherObj React, shift mgl32.Vec2) (bool, m
 	colldingDt := shift.Normalize()
 	//fmt.Println(colldingShift, shift)
 	for math.Abs(float64(colldingShift[0])) <= math.Abs(float64(shift[0])) && math.Abs(float64(colldingShift[1])) <= math.Abs(float64(shift[1])) {
-		tempColldingShift := colldingShift.Sub(colldingDt)
+		//tempColldingShift := colldingShift.Sub(colldingDt)
+		tempColldingShift := colldingShift.Add(colldingDt)
 		//fmt.Println(colldingShift, shift)
 		if WillCollidingAABB(thisGameObj, anotherObj, tempColldingShift) {
-			//fmt.Println("colldingDt:", colldingDt, "tempColldingShift:", tempColldingShift)
-			return true, thisGameObj.GetPosition().Sub(colldingShift)
+			//fmt.Println("sX:", thisGameObj.GetPosition()[0], "sY:", thisGameObj.GetPosition()[1], "dX:", anotherObj.GetPosition()[0], "dY:", anotherObj.GetPosition()[1])
+			//fmt.Println("colldingDt:", colldingDt, "tempColldingShift:", tempColldingShift, "shift:", shift)
+			//return true, thisGameObj.GetPosition().Sub(colldingShift)
+			return true, thisGameObj.GetPosition().Add(colldingShift)
 		}
 		colldingShift = tempColldingShift
 	}
