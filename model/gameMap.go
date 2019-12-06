@@ -67,49 +67,77 @@ func (gameMap *GameMap) IsColl(gameObj GameObj, shift mgl32.Vec2) (bool, mgl32.V
 	position := gameObj.GetPosition()
 	size := gameObj.GetSize()
 	//startX, endX, startY, endY := gameMap.FetchBox(mgl32.Vec2{position[0], position[1]}, mgl32.Vec2{size[0], size[1]})
-	startX, endX, startY, endY := gameMap.FetchBox(mgl32.Vec2{position[0], position[1]}, mgl32.Vec2{size[0], size[1]})
-	for i := startX; i <= endX; i++ {
-		for j := startY; j < endY; j++ {
+	startX, endX, startY, endY := gameMap.FetchBox(mgl32.Vec2{position[0], position[1]}, mgl32.Vec2{size[0], size[1]}, 1)
+	positionMap := make(map[float64]mgl32.Vec2)
+	for i := startY; i <= endY; i++ {
+		for j := startX; j < endX; j++ {
 			box := gameMap.boxes[i][j]
 			if box != nil {
-				isCol, position := physic.ColldingAABBPlace(gameObj, box, shift)
+				isCol, p := physic.ColldingAABBPlace(gameObj, box, shift)
 				if isCol {
-					fmt.Println(i, j)
+					//fmt.Println(j, i)
+					spacing := getSpacing(position, p)
+					positionMap[spacing] = p
 					//fmt.Println(box.x, box.y, box.size, box.texture.ID)
-					return isCol, position
 				}
 			}
 		}
 	}
+	if len(positionMap) > 0 {
+		return true, getShortPositon(positionMap)
+	}
 	return false, gameObj.GetPosition()
 }
 
+func getShortPositon(pmap map[float64]mgl32.Vec2) mgl32.Vec2 {
+	min := float64(^uint(0) >> 1)
+	for s, _ := range pmap {
+		//if isEqual(min, float64(0)) && !isEqual(s, float64(0)) {
+		if min > s {
+			min = s
+		}
+	}
+	fmt.Println("pmap:", pmap, "min spacing:", min)
+	return pmap[min]
+}
+
+func isEqual(f1 float64, f2 float64) bool {
+	return math.Abs(f1-f2) == float64(0)
+}
+
+func getSpacing(s mgl32.Vec2, d mgl32.Vec2) float64 {
+	w := d[0] - s[0]
+	h := d[1] - s[1]
+	//fmt.Println("s:", s, "d:", d, "w:", w, "h:", h, "spacing:", math.Sqrt(math.Pow(float64(w), 2) + math.Pow(float64(h), 2)))
+	return math.Sqrt(math.Pow(float64(w), 2) + math.Pow(float64(h), 2))
+}
+
 // 将一个物体坐标转换为地图格子坐标范围
-func (gameMap *GameMap) FetchBox(position, size mgl32.Vec2) (int, int, int, int) {
-	startY := int(math.Floor(float64(position[0]/gameMap.Width*float32(gameMap.widthBoxNum)))) - 1
-	if startY <= 0 {
-		startY = 0
-	}
-	endY := int(math.Ceil(float64((position[0]+size[0])/gameMap.Width*float32(gameMap.widthBoxNum)))) + 1
-	if endY >= gameMap.widthBoxNum {
-		endY = gameMap.widthBoxNum - 1
-	}
-	startX := int(math.Floor(float64(position[1]/gameMap.Height*float32(gameMap.heightBoxNum)))) - 1
-	if startX < 0 {
+func (gameMap *GameMap) FetchBox(position, size mgl32.Vec2, extraboxnum int) (int, int, int, int) {
+	startX := int(math.Floor(float64(position[0]/gameMap.Width*float32(gameMap.widthBoxNum-extraboxnum)))) - 1
+	if startX <= 0 {
 		startX = 0
 	}
-	endX := int(math.Ceil(float64((position[1]+size[1])/gameMap.Height*float32(gameMap.heightBoxNum)))) + 1
-	if endX >= gameMap.heightBoxNum {
-		endX = gameMap.heightBoxNum - 1
+	endX := int(math.Ceil(float64((position[0]+size[0])/gameMap.Width*float32(gameMap.widthBoxNum+extraboxnum)))) + 1
+	if endX >= gameMap.widthBoxNum {
+		endX = gameMap.widthBoxNum - 1
+	}
+	startY := int(math.Floor(float64(position[1]/gameMap.Height*float32(gameMap.heightBoxNum-extraboxnum)))) - 1
+	if startY < 0 {
+		startY = 0
+	}
+	endY := int(math.Ceil(float64((position[1]+size[1])/gameMap.Height*float32(gameMap.heightBoxNum+extraboxnum)))) + 1
+	if endY >= gameMap.heightBoxNum {
+		endY = gameMap.heightBoxNum - 1
 	}
 	return startX, endX, startY, endY
 }
 
 //渲染地图
 func (gameMap *GameMap) Draw(position mgl32.Vec2, zoom mgl32.Vec2, renderer *sprite.SpriteRenderer) {
-	startX, endX, startY, endY := gameMap.FetchBox(position, zoom)
-	for i := startX; i <= endX; i++ {
-		for j := startY; j < endY; j++ {
+	startX, endX, startY, endY := gameMap.FetchBox(position, zoom, 0)
+	for i := startY; i <= endY; i++ {
+		for j := startX; j < endX; j++ {
 			box := gameMap.boxes[i][j]
 			if box != nil {
 				box.Draw(renderer)
