@@ -21,7 +21,7 @@ type MoveObj struct {
 	//移动时的动画纹理
 	moveTextures []*resource.Texture2D
 	//静止时的纹理
-	standTexture []*resource.Texture2D
+	standTextures []*resource.Texture2D
 	//当前静止帧
 	standIndex int
 	//静止帧之间的切换阈值
@@ -44,7 +44,7 @@ func NewMoveObject(gameObj GameObj, movementSpeed, flySpeed float32, moveTexture
 		flySpeed:      flySpeed,
 		moveIndex:     0,
 		moveDelta:     0,
-		standTexture:  standTextures,
+		standTextures: standTextures,
 		standIndex:    0,
 		standDelta:    0,
 	}
@@ -53,13 +53,13 @@ func NewMoveObject(gameObj GameObj, movementSpeed, flySpeed float32, moveTexture
 
 //恢复静止
 func (moveObj *MoveObj) Stand(delta float32) {
-	if moveObj.standIndex >= len(moveObj.standTexture) {
+	if moveObj.standIndex >= len(moveObj.standTextures) {
 		moveObj.standIndex = 0
 	}
 	moveObj.standDelta += delta
 	if moveObj.standDelta > 0.1 {
 		moveObj.standDelta = 0
-		moveObj.texture = moveObj.standTexture[moveObj.standIndex]
+		moveObj.texture = moveObj.standTextures[moveObj.standIndex]
 		moveObj.standIndex += 1
 	}
 }
